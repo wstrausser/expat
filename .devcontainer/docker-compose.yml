@@ -23,6 +23,20 @@ services:
       - expat-dev
     ports:
       - "127.0.0.1:5432:5432"
+  
+  mysql:
+    image: mysql:9
+    environment:
+      MYSQL_ROOT_PASSWORD: mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      timeout: 2s
+      retries: 10
+    networks:
+      - expat-dev
+    ports:
+      - "127.0.0.1:3306:3306"
+
 
 networks:
   expat-dev:

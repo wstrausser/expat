@@ -1,5 +1,5 @@
 from expat.config import Config
-from expat.cli import config
+from expat.cli import config, migrate
 
 import click
 
@@ -31,3 +31,4 @@ def entrypoint(context: click.Context, config_file: str | None):
 
 
 entrypoint.add_command(config.entrypoint)
+entrypoint.add_command(migrate.entrypoint)
