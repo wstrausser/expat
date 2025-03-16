@@ -1,0 +1,28 @@
+services:
+  dev-environment:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    volumes:
+      - ../..:/workspaces:cached
+      - ~/.ssh:/home/vscode/.ssh:cached
+    command: sleep infinity
+    env_file:
+      - path: ../.env
+        required: false
+    networks:
+      - expat-dev
+  
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
+      POSTGRES_PASSWORD: postgres
+    networks:
+      - expat-dev
+    ports:
+      - "127.0.0.1:5432:5432"
+
+networks:
+  expat-dev:
