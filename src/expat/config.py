@@ -1,10 +1,22 @@
-from pydantic import BeforeValidator, Field, SecretStr, model_validator
-from pydantic_settings import BaseSettings
+from pydantic import (
+    BaseModel,
+    BeforeValidator,
+    SecretStr,
+    TypeAdapter,
+    model_validator,
+)
+from pydantic_settings import (
+    BaseSettings,
+    InitSettingsSource,
+    PydanticBaseSettingsSource,
+    SettingsConfigDict,
+    TomlConfigSettingsSource,
+)
 
 import logging
 import os
-import tomllib
-from typing import Annotated, Any, Literal, Self, Type
+from typing import Annotated, Any, Generic, Literal, Type, TypeVar
+from urllib.parse import urlencode
 
 
 logger = logging.getLogger(__name__)
@@ -15,53 +27,84 @@ LogLevel = Literal["critical", "error", "warning", "info", "debug"]
 DBType = Literal["postgres", "mysql"]
 
 
-class Config(BaseSettings, case_sensitive=True, populate_by_name=True):
-    config_file: ExpandableString | None = Field(alias="EXPAT_CONFIG_FILE")
+class DBConfig(BaseModel): ...
 
-    db_type: DBType = Field(alias="EXPAT_DB_TYPE")
-    db_host: str = Field(alias="EXPAT_DB_HOST")
-    db_port: int = Field(alias="EXPAT_DB_PORT")
-    db_database: str | None = Field(alias="EXPAT_DB_DATABASE", default=None)
-    db_user: str = Field(alias="EXPAT_DB_USER")
-    db_password: SecretStr = Field(alias="EXPAT_DB_PASSWORD")
-    db_options: dict[str, Any] = Field(alias="EXPAT_DB_OPTIONS", default={})
 
-    log_level: LogLevel = Field(alias="EXPAT_LOG_LEVEL")
+class PostgresConfig(DBConfig):
+    host: str
+    port: int
+    database: str
+    user: str
+    password: SecretStr
+    options: dict[str, str] = {}
 
-    @classmethod
-    def from_file(cls: Type[Self], config_path: str) -> Self:
-        config_dict = {}
+    @property
+    def connection_string(self) -> str:
+        if self.options is not None:
+            options_string = f"?{urlencode(self.options)}"
+        else:
+            options_string = ""
 
-        config_dict["EXPAT_CONFIG_FILE"] = config_path
+        return (
+            f"postgresql://{self.user}:"
+            f"{self.password.get_secret_value()}@{self.host}:"
+            f"{self.port}/{self.database}{options_string}"
+        )
 
-        with open(config_path, "rb") as f:
-            config_toml = tomllib.load(f)
 
-        tables = ["database", "logs"]
+class MySQLConfig(DBConfig):
+    host: str
+    port: int
+    user: str
+    password: SecretStr
+    options: dict[str, Any] = {}
 
-        for table_name in tables:
-            table = config_toml[table_name]
-            for key, value in table.items():
-                config_dict[key] = value
 
-        return cls(**config_dict)
+class LogConfig(BaseModel):
+    log_level: LogLevel
 
     @property
     def python_log_level(self) -> str:
         return self.log_level.upper()
 
-    @model_validator(mode="after")
-    def check_database_field(self) -> Self:
-        if self.db_type == "mysql" and self.db_database is not None:
-            raise ValueError("'db_database' setting should not be used with mysql")
-        elif self.db_type == "postgres" and self.db_database is None:
-            raise ValueError("'db_database' must be set with postgres")
 
-        return self
+T = TypeVar("T", bound=DBConfig)
 
-    def show(self) -> None:
-        log_string = ""
-        for key, value in self.model_dump().items():
-            log_string += f"\n        {key.ljust(20, ' ')} = {value}"
 
-        logger.info(f"Configuration loaded successfully:{log_string}\n")
+class Config(BaseSettings, Generic[T]):
+    config_file: ExpandableString | None
+    logs: LogConfig
+    database_type: DBType
+    database: T
+
+    model_config = SettingsConfigDict()
+
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls: Type[BaseSettings],
+        init_settings: InitSettingsSource,
+        **kwargs,
+    ) -> tuple[PydanticBaseSettingsSource, ...]:
+        toml_file = init_settings.init_kwargs.get("config_file", "expat.toml")
+
+        toml_settings = TomlConfigSettingsSource(settings_cls, toml_file)
+
+        return (init_settings, toml_settings)
+
+    @model_validator(mode="before")
+    def set_database_config(cls, data: Any) -> Any:
+        db_config = data["database"]
+
+        if isinstance(db_config, dict):
+            db_type: DBType = TypeAdapter(DBType).validate_python(db_config.pop("type"))
+
+            match db_type:
+                case "postgres":
+                    data["database"] = PostgresConfig(**db_config)
+                case "mysql":
+                    data["database"] = MySQLConfig(**db_config)
+
+            data["database_type"] = db_type
+
+        return data

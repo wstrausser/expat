@@ -1,4 +1,4 @@
-from expat.config import Config
+from expat.config import DBConfig
 
 from abc import ABC, abstractmethod
 from types import TracebackType
@@ -6,9 +6,9 @@ from typing import Self, Type
 
 
 class Driver(ABC):
-    config: Config
+    config: DBConfig
 
-    def __init__(self, config: Config):
+    def __init__(self, config: DBConfig):
         self.config = config
 
     @abstractmethod

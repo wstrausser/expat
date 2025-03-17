@@ -1,21 +1,21 @@
 # [database]
-# db_type = "postgres"
-# db_host = "postgres"
-# db_port = 5432
-# db_database = "postgres"
-# db_user = "postgres"
-# db_password = "postgres"
+# type = "postgres"
+# host = "postgres"
+# port = 5432
+# database = "postgres"
+# user = "postgres"
+# password = "postgres"
 
 # [logs]
 # log_level = "info"
 
 [database]
-db_type = "mysql"
-db_host = "mysql"
-db_port = 3306
-db_user = "root"
-db_password = "mysql"
-db_database = "mysql"
+type = "mysql"
+host = "mysql"
+port = 3306
+user = "root"
+password = "mysql"
+database = "mysql"
 
 [logs]
 log_level = "info"

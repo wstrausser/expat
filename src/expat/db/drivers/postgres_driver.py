@@ -1,3 +1,4 @@
+from expat.config import PostgresConfig
 from expat.db.drivers.driver import Driver
 
 from psycopg import Connection, connect
@@ -9,6 +10,7 @@ from urllib.parse import urlencode
 
 @final
 class PostgresDriver(Driver):
+    config: PostgresConfig
     connection: Connection
 
     def __enter__(self) -> Self:
@@ -31,15 +33,15 @@ class PostgresDriver(Driver):
 
     @property
     def connection_string(self) -> str:
-        if self.config.db_options is not None:
-            options_string = f"?{urlencode(self.config.db_options)}"
+        if self.config.options is not None:
+            options_string = f"?{urlencode(self.config.options)}"
         else:
             options_string = ""
 
         return (
-            f"postgresql://{self.config.db_user}:"
-            f"{self.config.db_password.get_secret_value()}@{self.config.db_host}:"
-            f"{self.config.db_port}/{self.config.db_database}{options_string}"
+            f"postgresql://{self.config.user}:"
+            f"{self.config.password.get_secret_value()}@{self.config.host}:"
+            f"{self.config.port}/{self.config.database}{options_string}"
         )
 
     def create_expat_tables(self):

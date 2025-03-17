@@ -20,11 +20,11 @@ def entrypoint(context: click.Context, config_file: str | None):
                 "variable or as a command-line argument"
             )
 
-    config = Config.from_file(config_file)
+    config = Config(config_file=config_file)  # type: ignore
     context.obj = config
 
     logging.basicConfig(
-        level=config.python_log_level,
+        level=config.logs.python_log_level,
         format="%(asctime)s.%(msecs)03d %(levelname)-10s %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )

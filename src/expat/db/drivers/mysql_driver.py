@@ -1,3 +1,4 @@
+from expat.config import MySQLConfig
 from expat.db.drivers.driver import Driver
 
 from pymysql import Connection, connect
@@ -8,16 +9,16 @@ from typing import Self, Type, final
 
 @final
 class MySQLDriver(Driver):
+    config: MySQLConfig
     connection: Connection
 
     def __enter__(self) -> Self:
-        print(self.config.db_password.get_secret_value())
         self.connection = connect(
-            host=self.config.db_host,
-            user=self.config.db_user,
-            password=self.config.db_password.get_secret_value(),
-            port=self.config.db_port,
-            **self.config.db_options,
+            host=self.config.host,
+            user=self.config.user,
+            password=self.config.password.get_secret_value(),
+            port=self.config.port,
+            **self.config.options,
         )
         return self
 
