@@ -14,3 +14,4 @@ def test():
     flavour = "sqlite"
     connection = sqlite3.connect("scratch/test.db")
     schema_up(connection, flavour)
+    connection.cursor()

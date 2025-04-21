@@ -1,4 +1,7 @@
-from expat.connection import DBAPIConnection
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from _typeshed.dbapi import DBAPIConnection
+
 from expat.types import Flavour
 
 import pathlib
