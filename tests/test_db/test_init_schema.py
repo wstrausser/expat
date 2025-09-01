@@ -18,5 +18,4 @@ def sqlite_db():
 
 
 def test_schema_up_sqlite(sqlite_db: sqlite3.Connection):
-    init_schema.schema_up(sqlite_db)
-
+    init_schema.init_schema(sqlite_db)
