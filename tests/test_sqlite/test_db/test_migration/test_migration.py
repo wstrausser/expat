@@ -1,12 +1,12 @@
 from expat.config import ExpatConfig
-from expat.db.migration import _get_migrations
+from expat.db.migration import get_migrations
 from expat.db.migration import Migration, MigrationRow
 
 import sqlite3
 
 
 def test_get_migrations(test_config: ExpatConfig):
-    migrations = _get_migrations(test_config.migration_dir)
+    migrations = get_migrations(test_config.migration_dir)
 
     assert migrations == [
         Migration(
