@@ -18,8 +18,8 @@ def test_schema_up(sqlite_db: sqlite3.Connection):
     cursor.close()
 
     assert result == [
-        ('migration_id', 'VARCHAR(17)', 1),
-        ('migration_name', 'VARCHAR(1000)', 0),
-        ('up_hash', 'VARCHAR(32)', 0),
-        ('down_hash', 'VARCHAR(32)', 0),
+        ("migration_id", "VARCHAR(17)", 1),
+        ("migration_name", "VARCHAR(1000)", 0),
+        ("up_hash", "VARCHAR(32)", 0),
+        ("down_hash", "VARCHAR(32)", 0),
     ]

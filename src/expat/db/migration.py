@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from _typeshed.dbapi import DBAPIConnection
 
@@ -31,45 +32,60 @@ class Migration(BaseModel):
         )
 
         return migration
-    
-    def apply(self, connection: DBAPIConnection, metadata_connection: DBAPIConnection, validate_hashes: bool) -> None:
+
+    def apply(
+        self,
+        connection: DBAPIConnection,
+        metadata_connection: DBAPIConnection,
+        validate_hashes: bool,
+    ) -> None:
         if self._is_applied(metadata_connection, validate_hashes):
             return None
-        
+
         self._execute_up(connection)
         self._insert_migration_row(metadata_connection)
-    
-    def rollback(self, connection: DBAPIConnection, metadata_connection: DBAPIConnection, validate_hashes: bool) -> None:
+
+    def rollback(
+        self,
+        connection: DBAPIConnection,
+        metadata_connection: DBAPIConnection,
+        validate_hashes: bool,
+    ) -> None:
         if not self._is_applied(metadata_connection, validate_hashes):
             return None
-        
+
         self._execute_down(connection)
         self._delete_migration_row(metadata_connection)
-                
+
     def _is_applied(self, connection: DBAPIConnection, validate_hashes: bool) -> bool:
         cursor = connection.cursor()
 
-        cursor.execute(f"SELECT * FROM migrations WHERE migration_id = '{self.migration_id}';")
+        cursor.execute(
+            f"SELECT * FROM migrations WHERE migration_id = '{self.migration_id}';"
+        )
         result = cursor.fetchone()
 
         cursor.close()
 
         if result is None:
             return False
-        
+
         if not isinstance(result, tuple):
             raise ValueError(
                 f"Database connections should be configured to return tuples, not {type(result)}"
             )
-        
+
         migration_row = MigrationRow.from_row(result)
 
         if validate_hashes:
-            if self.up_hash != migration_row.up_hash or self.down_hash != migration_row.down_hash:
+            if (
+                self.up_hash != migration_row.up_hash
+                or self.down_hash != migration_row.down_hash
+            ):
                 raise MigrationValidationError(self, migration_row)
-        
+
         return True
-    
+
     def _insert_migration_row(self, connection: DBAPIConnection) -> None:
         cursor = connection.cursor()
 
@@ -88,7 +104,7 @@ class Migration(BaseModel):
         )
 
         cursor.close()
-    
+
     def _delete_migration_row(self, connection: DBAPIConnection) -> None:
         cursor = connection.cursor()
 
@@ -100,7 +116,7 @@ class Migration(BaseModel):
         )
 
         cursor.close()
-    
+
     def _execute_up(self, connection: DBAPIConnection) -> None:
         cursor = connection.cursor()
 
@@ -110,7 +126,7 @@ class Migration(BaseModel):
         cursor.execute(up_script)
 
         cursor.close()
-    
+
     def _execute_down(self, connection: DBAPIConnection) -> None:
         cursor = connection.cursor()
 
@@ -148,5 +164,5 @@ def get_migrations(migration_dir: Path) -> list[Migration]:
         migration = Migration.from_path(dir)
 
         migrations.append(migration)
-    
+
     return migrations

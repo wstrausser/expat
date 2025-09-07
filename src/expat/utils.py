@@ -7,7 +7,7 @@ def hash_file(path: Path) -> str:
 
     with path.open("rb") as f:
         file_content = f.read()
-    
+
     hasher.update(file_content)
 
     return hasher.hexdigest()

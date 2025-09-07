@@ -14,15 +14,17 @@ def test_config() -> ExpatConfig:
         migration_dir=Path(__file__).parent.parent.parent / "test_data" / "migrations"
     )
 
+
 @fixture
 def sqlite_db() -> Generator[sqlite3.Connection, Any, Any]:
     db_path = Path("test.db")
     connection = sqlite3.connect(db_path)
-    
+
     yield connection
 
     connection.close()
     db_path.unlink()
+
 
 @fixture
 def initialized_sqlite_db() -> Generator[sqlite3.Connection, Any, Any]:
@@ -34,6 +36,7 @@ def initialized_sqlite_db() -> Generator[sqlite3.Connection, Any, Any]:
 
     connection.close()
     db_path.unlink()
+
 
 @fixture
 def test_migrations(test_config: ExpatConfig) -> list[Migration]:
