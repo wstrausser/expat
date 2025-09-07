@@ -11,7 +11,7 @@ from typing import Any, Generator
 @fixture
 def test_config() -> ExpatConfig:
     return ExpatConfig(
-        migration_dir=Path(__file__).parent.parent / "test_data" / "migrations"
+        migration_dir=Path(__file__).parent.parent.parent / "test_data" / "migrations"
     )
 
 @fixture
