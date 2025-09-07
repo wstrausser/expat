@@ -32,19 +32,19 @@ class Migration(BaseModel):
 
         return migration
     
-    def apply(self, connection: DBAPIConnection, validate_hashes: bool) -> None:
-        if self._is_applied(connection, validate_hashes):
+    def apply(self, connection: DBAPIConnection, metadata_connection: DBAPIConnection, validate_hashes: bool) -> None:
+        if self._is_applied(metadata_connection, validate_hashes):
             return None
         
         self._execute_up(connection)
-        self._insert_migration_row(connection)
+        self._insert_migration_row(metadata_connection)
     
-    def rollback(self, connection: DBAPIConnection, validate_hashes: bool) -> None:
-        if not self._is_applied(connection, validate_hashes):
+    def rollback(self, connection: DBAPIConnection, metadata_connection: DBAPIConnection, validate_hashes: bool) -> None:
+        if not self._is_applied(metadata_connection, validate_hashes):
             return None
         
         self._execute_down(connection)
-        self._delete_migration_row(connection)
+        self._delete_migration_row(metadata_connection)
                 
     def _is_applied(self, connection: DBAPIConnection, validate_hashes: bool) -> bool:
         cursor = connection.cursor()
