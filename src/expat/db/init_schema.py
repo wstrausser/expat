@@ -8,11 +8,13 @@ from pathlib import Path
 
 
 def init_schema(connection: DBAPIConnection) -> None:
-    schema_script = Path(__file__).parent.parent.parent.parent / "init_schema.sql"
-
-    with open(schema_script, "r") as f:
-        script = f.read()
-
     cursor = connection.cursor()
-    cursor.execute(script)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS migrations (
+            migration_id VARCHAR(17) PRIMARY KEY,
+            migration_name VARCHAR(1000),
+            up_hash VARCHAR(32),
+            down_hash VARCHAR(32)
+        );
+    """)
     cursor.close()
