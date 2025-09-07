@@ -1,6 +1,6 @@
 from expat.config import ExpatConfig
 from expat.db.init_schema import init_schema
-from expat.db.migration import Migration, get_migrations
+from expat.db.migration import Migration, _get_migrations
 
 from pathlib import Path
 from pytest import fixture
@@ -37,4 +37,4 @@ def initialized_sqlite_db() -> Generator[sqlite3.Connection, Any, Any]:
 
 @fixture
 def test_migrations(test_config: ExpatConfig) -> list[Migration]:
-    return get_migrations(test_config.migration_dir)
+    return _get_migrations(test_config.migration_dir)

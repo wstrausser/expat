@@ -32,7 +32,21 @@ class Migration(BaseModel):
 
         return migration
     
-    def _is_applied(self, connection: DBAPIConnection, validate_hashes: bool = True) -> bool:
+    def apply(self, connection: DBAPIConnection, validate_hashes: bool = True) -> None:
+        if self._is_applied(connection, validate_hashes):
+            return None
+        
+        self._execute_up(connection)
+        self._insert_migration_row(connection)
+    
+    def rollback(self, connection: DBAPIConnection, validate_hashes: bool = True) -> None:
+        if not self._is_applied(connection, validate_hashes):
+            return None
+        
+        self._execute_down(connection)
+        self._delete_migration_row(connection)
+                
+    def _is_applied(self, connection: DBAPIConnection, validate_hashes: bool) -> bool:
         cursor = connection.cursor()
 
         cursor.execute(f"SELECT * FROM migrations WHERE migration_id = '{self.migration_id}';")
@@ -56,7 +70,7 @@ class Migration(BaseModel):
         
         return True
     
-    def _insert(self, connection: DBAPIConnection) -> None:
+    def _insert_migration_row(self, connection: DBAPIConnection) -> None:
         cursor = connection.cursor()
 
         # Have to use f-strings because parameter styles vary by library; not too worried about
@@ -72,6 +86,38 @@ class Migration(BaseModel):
                 );
             """
         )
+
+        cursor.close()
+    
+    def _delete_migration_row(self, connection: DBAPIConnection) -> None:
+        cursor = connection.cursor()
+
+        cursor.execute(
+            f"""
+                DELETE FROM migrations
+                WHERE migration_id = '{self.migration_id}';
+            """
+        )
+
+        cursor.close()
+    
+    def _execute_up(self, connection: DBAPIConnection) -> None:
+        cursor = connection.cursor()
+
+        with open(self.migration_path / "up.sql", "r") as f:
+            up_script = f.read()
+
+        cursor.execute(up_script)
+
+        cursor.close()
+    
+    def _execute_down(self, connection: DBAPIConnection) -> None:
+        cursor = connection.cursor()
+
+        with open(self.migration_path / "down.sql", "r") as f:
+            down_script = f.read()
+
+        cursor.execute(down_script)
 
         cursor.close()
 
